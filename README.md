@@ -34,6 +34,8 @@ The script is heavily commented to highlight where the fresh context is created 
 
 ### How to run
 
+#### 1st Ralphing attempt
+
 From the project root:
 
 - **Ralph Wiggum loop (default)** — iterative code-writing demo:
@@ -48,7 +50,7 @@ From the project root:
   ```
   This runs the analyst chain instead of the loop; no code file is written.
 
-  #### example script produced with the 1st ralphing script
+##### example script produced with the 1st ralphing script
 
   ```python
   """
