@@ -10,7 +10,8 @@ This script demonstrates:
 
 Requirements: Python 3.12+, langgraph, langchain-ollama, Ollama (qwen3).
 
-How to run (for the demo):
+How to run (use the project venv):
+  source venv/bin/activate   # or: venv/bin/python
   python 1_ralph_wiggum_technique.py              # runs the code-generation loop
   python 1_ralph_wiggum_technique.py --analyst   # runs the analyst on example inputs
 """

@@ -26,17 +26,23 @@ The script is heavily commented to highlight where the fresh context is created 
   ollama run qwen3
   ```
   (Run once so the model is available; you can stop it with Ctrl+C and keep Ollama running in the background.)
-- Python dependencies:
-  Install from the project’s requirements file:
+  The `qwen3` model used with Ollama has a context window of **~32K tokens** — roughly equivalent to a ~100-page short novel like Kafka’s *The Metamorphosis*.
+- Python dependencies: use the project **venv** and install from the requirements file:
   ```bash
+  source venv/bin/activate
   pip install -r requirements.txt
   ```
+  Or run scripts with the venv interpreter: `venv/bin/python <script>.py`.
 
 ### How to run
 
-#### 1st Ralphing attempt
+From the project root, activate the venv (or use `venv/bin/python`):
 
-From the project root:
+```bash
+source venv/bin/activate
+```
+
+#### 1st Ralphing attempt
 
 - **Ralph Wiggum loop (default)** — iterative code-writing demo:
   ```bash
@@ -144,3 +150,34 @@ def is_finance_related(text: str) -> bool:
 # else:
 #     print("No financial analysis found")
 ```
+
+---
+
+## 2nd Ralphing attempt (better specs)
+
+**`2_ralfing_with_better_specs.py`** is an evolution of the naive brute-force loop. It demonstrates how **Constraints (the mold)** and a **Test-Driven Development (TDD) bucket** force the AI to understand business logic nuance — shifting the bottleneck from writing code to writing tests and specs.
+
+### What changed
+
+- **Objective testing** — Instead of only checking “does the code run?”, the `run_tests` node runs a **strict test suite** against the generated `analyze_news` function:
+  - **Test 1 (Standard Finance):** “Apple announces record Q4 earnings.” → must return the Pydantic object with `ticker_symbols` including `"AAPL"`.
+  - **Test 2 (Irrelevant/Noise):** “To make Beef Bourguignon, simmer a chuck roast in Pinot Noir.” → must return the exact string `"NOT_FINANCE"`.
+  - **Test 3 (Ambiguous/Commodity):** “Crude oil traded higher this morning, breaking the $71 per barrel mark…” → must return the Pydantic object (not `NOT_FINANCE`) with `sentiment` **Bullish**.
+- Feedback to the `write_code` node states **which test passed or failed** and the **exact expected vs actual output**.
+- **Persistent scratchpad (`progress.txt`)** — To avoid **Context Rot** (the “malloc/free” problem of long chat history), each `run_tests` run appends the attempt number and test results to `out/ralfing_with_better_specs/progress.txt`. The `write_code` node **reads the entire scratchpad** from disk and injects it into the LLM prompt, so the model uses it to plan the next fix instead of raw conversation history.
+
+### How to run
+
+From the project root (with venv activated):
+
+- **Spec Alchemy loop (default)** — TDD-style loop until all three tests pass or 10 attempts:
+  ```bash
+  python 2_ralfing_with_better_specs.py
+  ```
+  Generated code is written to `out/ralfing_with_better_specs/generated.py`; the scratchpad is at `out/ralfing_with_better_specs/progress.txt`.
+
+- **Financial analyst demo** — Run the generated analyst on example inputs:
+  ```bash
+  python 2_ralfing_with_better_specs.py --analyst
+  ```
+  (Run the loop first so `generated.py` exists.)
