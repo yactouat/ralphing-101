@@ -47,3 +47,98 @@ From the project root:
   python 1_ralph_wiggum_technique.py --analyst
   ```
   This runs the analyst chain instead of the loop; no code file is written.
+
+  #### example script produced with the 1st ralphing script
+
+  ```python
+  """
+Financial News Analysis Module
+
+This module provides a function to analyze news articles for financial insights using
+LangChain's structured output pattern with Ollama's ChatOllama model. The analysis
+returns a structured Pydantic object if the article is finance-related, otherwise
+returns 'NOT_FINANCE'.
+"""
+
+from langchain_ollama import ChatOllama
+from langchain_core.prompts import ChatPromptTemplate
+from pydantic import BaseModel, Field
+from typing import List, Dict, Any
+
+class FinancialAnalysis(BaseModel):
+    """
+    Pydantic model for structured financial analysis output.
+    
+    Attributes:
+        sentiment (str): Market sentiment - Bullish/Bearish/Neutral
+        impact_score (int): 1-10 scale for market impact
+        ticker_symbols (List[str]): Relevant stock tickers
+        summary (str): Summary of key financial insights
+    """
+    sentiment: str = Field(..., enum=["Bullish", "Bearish", "Neutral"])
+    impact_score: int = Field(..., ge=1, le=10)
+    ticker_symbols: List[str] = Field(...)
+    summary: str = Field(...)
+
+# Initialize Ollama chat model with temperature for balanced responses
+llm = ChatOllama(model="qwen3", temperature=0.2)
+# Create structured output runnable for FinancialAnalysis
+structured_llm = llm.with_structured_output(FinancialAnalysis)
+
+def analyze_news(article: str) -> Any:
+    """
+    Analyze a news article for financial insights.
+    
+    Args:
+        article (str): The news article text to analyze
+        
+    Returns:
+        FinancialAnalysis: Structured analysis if finance-related
+        str: 'NOT_FINANCE' if no financial angle detected
+    """
+    # First check if article contains finance-related keywords
+    if not is_finance_related(article):
+        return "NOT_FINANCE"
+    
+    # Create prompt template to guide the analysis
+    prompt = ChatPromptTemplate.from_messages([
+        ("human", "Analyze this news article: {article}")
+    ])
+    
+    # Chain prompt with structured output model
+    analysis_chain = prompt | structured_llm
+    
+    # Execute analysis and return result
+    return analysis_chain.invoke({"article": article})
+
+def is_finance_related(text: str) -> bool:
+    """
+    Check if text contains finance-related keywords.
+    
+    Args:
+        text (str): Text to analyze for financial context
+        
+    Returns:
+        bool: True if finance-related keywords are found
+    """
+    # Comprehensive list of finance-related keywords
+    finance_keywords = {
+        "finance", "stock", "market", "investment", "budget", "currency", 
+        "interest", "portfolio", "equity", "dividend", "bond", "recession", 
+        "inflation", "economic", "growth", "sector", "industry", "asset", 
+        "liquidity", "capital", "profit", "loss", "share", "price", "volume"
+    }
+    
+    # Convert text to lowercase for case-insensitive matching
+    text_lower = text.lower()
+    
+    # Check for any matching keyword
+    return any(keyword in text_lower for keyword in finance_keywords)
+
+# Example usage:
+# result = analyze_news("Stock market hits new highs after Q3 earnings reports")
+# if isinstance(result, FinancialAnalysis):
+#     print(f"Sentiment: {result.sentiment}, Impact: {result.impact_score}")
+# else:
+#     print("No financial analysis found")
+```
